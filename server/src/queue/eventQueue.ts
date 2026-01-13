@@ -24,7 +24,6 @@ const createQueue = () => {
         });
 
         q.on('error', (err) => {
-            // Silent error on connection refusal to prevent crash loop if handled
             console.warn('Redis connection issue:', (err as any).code);
         });
         return q;
@@ -36,7 +35,6 @@ const createQueue = () => {
 eventQueue = createQueue();
 
 export const addEventToQueue = async (eventData: any) => {
-    // If we decided earlier that Redis is down, or if queue is null
     if (useRedis && eventQueue) {
         try {
             await eventQueue.add('process-event', eventData);
