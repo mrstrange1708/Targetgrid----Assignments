@@ -4,7 +4,24 @@ import ScoreHistory from '../models/ScoreHistory';
 
 export const getLeads = async (req: Request, res: Response) => {
     try {
-        const leads = await Lead.find().sort({ current_score: -1 });
+        const { sortBy = 'current_score', order = 'desc', company, search } = req.query;
+
+        const query: any = {};
+        if (company) {
+            query.company = company;
+        }
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { company: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const sortOptions: any = {};
+        sortOptions[sortBy as string] = order === 'asc' ? 1 : -1;
+
+        const leads = await Lead.find(query).sort(sortOptions);
         res.json(leads);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching leads' });
