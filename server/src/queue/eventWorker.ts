@@ -111,6 +111,12 @@ export const processEventLogic = async (data: any, io: Server) => {
             email: lead.email,
             timestamp: new Date()
         });
+
+        io.emit('analytics-refresh', {
+            type: event_type,
+            timestamp: new Date()
+        });
+
         console.log(`Processed ${event_type} for ${lead.email || lead.externalId}. Score: ${previousScore} -> ${lead.current_score}`);
 
     } catch (err) {

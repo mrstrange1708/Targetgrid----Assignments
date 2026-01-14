@@ -21,6 +21,7 @@ import {
     Area,
     Cell
 } from 'recharts';
+import { socket } from '../lib/socket';
 
 interface Stats {
     totalLeads: number;
@@ -56,33 +57,47 @@ const Dashboard: React.FC = () => {
     const [trends, setTrends] = useState<TrendData[]>([]);
     const [topLeads, setTopLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
+    const refreshTimeout = React.useRef<NodeJS.Timeout | null>(null);
+
+    const fetchData = async (showLoading = false) => {
+        if (showLoading) setLoading(true);
+        try {
+            const [statsRes, companyRes, trendRes, leadsRes] = await Promise.all([
+                axios.get(`${API_BASE}/analytics/stats`),
+                axios.get(`${API_BASE}/analytics/companies`),
+                axios.get(`${API_BASE}/analytics/trends`),
+                axios.get(`${API_BASE}/leads`) // LeadList already sorts by score
+            ]);
+
+            setStats(statsRes.data);
+            setCompanies(companyRes.data);
+            setTrends(trendRes.data);
+            setTopLeads(leadsRes.data.slice(0, 5));
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+        } finally {
+            if (showLoading) setLoading(false);
+        }
+    };
+
+    const debouncedFetch = () => {
+        if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
+        refreshTimeout.current = setTimeout(() => {
+            fetchData();
+        }, 1000); // 1 second debounce
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [statsRes, companyRes, trendRes, leadsRes] = await Promise.all([
-                    axios.get(`${API_BASE}/analytics/stats`),
-                    axios.get(`${API_BASE}/analytics/companies`),
-                    axios.get(`${API_BASE}/analytics/trends`),
-                    axios.get(`${API_BASE}/leads`) // LeadList already sorts by score
-                ]);
+        fetchData(true);
 
-                setStats(statsRes.data);
-                setCompanies(companyRes.data);
-                setTrends(trendRes.data);
-                setTopLeads(leadsRes.data.slice(0, 5));
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-            } finally {
-                setLoading(false);
-            }
+        socket.on('analytics-refresh', debouncedFetch);
+        socket.on('score-update', debouncedFetch);
+
+        return () => {
+            socket.off('analytics-refresh', debouncedFetch);
+            socket.off('score-update', debouncedFetch);
+            if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
         };
-
-        fetchData();
-
-        // Refresh every 30 seconds for live updates
-        const interval = setInterval(fetchData, 30000);
-        return () => clearInterval(interval);
     }, []);
 
     const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316'];

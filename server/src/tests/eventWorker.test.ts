@@ -123,4 +123,21 @@ describe('Event Worker - processEventLogic', () => {
         expect(Lead.create).toHaveBeenCalledWith(expect.objectContaining({ email: 'nested@example.com' }));
         expect(mockLead.current_score).toBe(100);
     });
+
+    test('should skip processing if eventId already exists (idempotency)', async () => {
+        const eventData = {
+            eventId: 'duplicate_evt_1',
+            event_type: 'PURCHASE',
+            source: 'test',
+            timestamp: new Date(),
+            metadata: { email: 'test@example.com' }
+        };
+
+        (Event.findOne as jest.Mock).mockResolvedValue({ _id: 'existing_doc_id', processed: true });
+
+        await processEventLogic(eventData, mockIo as unknown as Server);
+
+        expect(Lead.findOne).not.toHaveBeenCalled();
+        expect(mockIo.emit).not.toHaveBeenCalled();
+    });
 });

@@ -9,7 +9,9 @@ import ingestRoutes from './routes/ingestRoutes';
 import leadRoutes from './routes/leadRoutes';
 import ruleRoutes from './routes/ruleRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
+import systemRoutes from './routes/systemRoutes';
 import { seedRules } from './utils/seedRules';
+import { initDecayWorker } from './queue/decayWorker';
 import { CLIENT_URL } from './config/config';
 
 dotenv.config();
@@ -34,13 +36,15 @@ connectDB().then(() => {
     console.error('Database connection error:', error);
 });
 
-// Initialize Event Worker
+// Initialize Workers
 initWorker(io);
+initDecayWorker(io);
 
 app.use('/api', ingestRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/rules', ruleRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/system', systemRoutes);
 
 app.get('/health', (req, res) => {
     res.send('API is running...');

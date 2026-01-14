@@ -17,6 +17,29 @@ The Event-Driven Lead Scoring System is a real-time, scalable application design
 
 ---
 
+## Technical Architecture & Design Decisions
+
+### 1. Event-Driven Architecture
+The system is built using an asynchronous, non-blocking architecture:
+- **Ingestion**: API endpoints (`/api/events`, `/api/webhook`) accept payloads and immediately push them to a **BullMQ** queue (backed by Redis). This ensures high throughput and low latency for the sender.
+- **Processing**: A decoupled **Event Worker** listens to the queue and processes events in the background. This allows the system to scale horizontally and handle traffic spikes without affecting UI responsiveness.
+- **Real-time Updates**: Once an event is processed and a score is updated, the server emits a `score-update` event via **WebSockets (Socket.IO)** to reflect changes in the frontend immediately.
+
+### 2. Idempotency Handling
+To prevent duplicate processing of the same event (e.g., due to network retries), every event requires a unique `eventId`.
+- Before processing, the worker checks the `Event` collection in MongoDB for the existence of the `eventId`.
+- If an event is already found and marked as `processed`, the worker skips it, maintaining score integrity even if the same payload is sent multiple times.
+
+### 3. Event Ordering & Out-of-Order Handling
+Handling "true" out-of-order events is achieved through two mechanisms:
+- **Timestamp Priority**: The scoring logic uses the provided `timestamp` from the event metadata rather than the arrival time. 
+- **Event Replay (Recalculation)**: When rules change or events arrive significantly out of order, the **Event Replay** utility can be triggered. This wipes current scores and re-processes the entire event history in strict chronological order based on event timestamps, ensuring the final score calculation is deterministic and correct.
+
+### 4. Configurable Scoring Rules
+Rules are never hardcoded. They are stored in the database and can be status-toggled or adjusted via the UI. At startup, the system seeds a default set of rules if none exist, but the engine fetches the latest active rule for an `event_type` from the database at the moment of processing.
+
+---
+
 ## Setup & Installation
 
 ### Prerequisites
@@ -96,6 +119,13 @@ The system accepts structured payloads representing external service integration
 
 ---
 
+## Advanced Features
+- **Score Decay**: Background worker automatically reduces scores for inactive leads (configurable).
+- **Event Replay**: High-privilege endpoint to recalculate scores from full historical event logs.
+- **Negative Scoring**: Support for point deductions (e.g., `REFUND`).
+- **Webhook Security**: HMAC-SHA256 signature verification for external webhooks.
+- **Schema Validation**: payload enforcement using Joi.
+
 ## Testing
 The project uses **Jest** for unit and integration testing.
 
@@ -104,9 +134,9 @@ The project uses **Jest** for unit and integration testing.
 npm test
 ```
 The tests cover:
-- Event worker logic.
-- Scoring correctness.
-- Idempotency checks.
+- **Unit Tests**: Scoring algorithm correctness (capping, negative points).
+- **Integration Tests**: Event worker logic, idempotency (deduplication), and lead identification.
+- **Service Tests**: Analytics and rule management.
 
 ---
 

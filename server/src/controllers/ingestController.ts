@@ -3,14 +3,17 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import csv from 'csv-parser';
 import { addEventToQueue } from '../queue/eventQueue';
+import { eventSchema, webhookSchema, verifyWebhookSignature } from '../utils/validation';
 
 export const ingestEvent = async (req: Request, res: Response) => {
     try {
-        const { eventId, event_type, source, timestamp, metadata } = req.body;
+        const { error, value } = eventSchema.validate(req.body);
 
-        if (!event_type || !source) {
-            return res.status(400).json({ message: 'Missing required fields: event_type, source' });
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message });
         }
+
+        const { eventId, event_type, source, timestamp, metadata } = value;
 
         const eventData = {
             eventId: eventId || uuidv4(),
@@ -31,7 +34,21 @@ export const ingestEvent = async (req: Request, res: Response) => {
 
 export const ingestWebhook = async (req: Request, res: Response) => {
     try {
-        const body = req.body;
+        // Webhook signature verification (if secret is configured)
+        const signature = req.headers['x-webhook-signature'] as string;
+        const secret = process.env.WEBHOOK_SECRET;
+
+        if (secret && signature) {
+            const isValid = verifyWebhookSignature(JSON.stringify(req.body), signature, secret);
+            if (!isValid) {
+                return res.status(401).json({ message: 'Invalid webhook signature' });
+            }
+        }
+
+        const { error, value: body } = webhookSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ message: 'Invalid webhook payload' });
+        }
 
         if (Array.isArray(body)) {
             for (const item of body) {
