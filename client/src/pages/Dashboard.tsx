@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { api } from '../lib/api';
 import {
     Users,
@@ -60,14 +60,15 @@ const Dashboard: React.FC = () => {
     const [range, setRange] = useState('7d');
     const refreshTimeout = React.useRef<NodeJS.Timeout | null>(null);
 
-    const fetchData = async (showLoading = false) => {
+    const fetchData = useCallback(async (showLoading = false) => {
         if (showLoading) setLoading(true);
+        console.log('[Dashboard] Fetching data for range:', range);
         try {
             const [statsRes, companyRes, trendRes, leadsRes] = await Promise.all([
                 api.get('/analytics/stats'),
                 api.get('/analytics/companies'),
                 api.get('/analytics/trends', { params: { range } }),
-                api.get('/leads') // LeadList already sorts by score
+                api.get('/leads')
             ]);
 
             setStats(statsRes.data);
@@ -75,31 +76,43 @@ const Dashboard: React.FC = () => {
             setTrends(trendRes.data);
             setTopLeads(leadsRes.data.slice(0, 5));
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
+            console.error('[Dashboard] Error fetching data:', error);
         } finally {
             if (showLoading) setLoading(false);
         }
-    };
+    }, [range]);
 
-    const debouncedFetch = () => {
+    const debouncedFetch = useCallback(() => {
         if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
         refreshTimeout.current = setTimeout(() => {
+            console.log('[Dashboard] Executing debounced fetch...');
             fetchData();
-        }, 1000); // 1 second debounce
-    };
+        }, 1000);
+    }, [fetchData]);
 
     useEffect(() => {
         fetchData(true);
 
-        socket.on('analytics-refresh', debouncedFetch);
-        socket.on('score-update', debouncedFetch);
+        const handleRefresh = (data: any) => {
+            console.log('[Dashboard] Received analytics-refresh:', data);
+            debouncedFetch();
+        };
+
+        const handleScoreUpdate = (data: any) => {
+            console.log('[Dashboard] Received score-update:', data);
+            debouncedFetch();
+        };
+
+        socket.on('analytics-refresh', handleRefresh);
+        socket.on('score-update', handleScoreUpdate);
 
         return () => {
-            socket.off('analytics-refresh', debouncedFetch);
-            socket.off('score-update', debouncedFetch);
+            console.log('[Dashboard] Cleaning up socket listeners');
+            socket.off('analytics-refresh', handleRefresh);
+            socket.off('score-update', handleScoreUpdate);
             if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
         };
-    }, [range]);
+    }, [fetchData, debouncedFetch]);
 
     const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316'];
 

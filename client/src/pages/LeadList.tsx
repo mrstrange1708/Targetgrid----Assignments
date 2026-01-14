@@ -27,12 +27,16 @@ export default function LeadList() {
         fetchLeads();
         fetchCompanies();
 
-        socket.on('score-update', (_data: any) => {
+        const handleScoreUpdate = (_data: any) => {
+            console.log('[LeadList] Received score-update, re-fetching...');
             fetchLeads();
-        });
+        };
+
+        socket.on('score-update', handleScoreUpdate);
 
         return () => {
-            socket.off('score-update');
+            console.log('[LeadList] Cleaning up socket listeners');
+            socket.off('score-update', handleScoreUpdate);
         };
     }, [searchTerm, sortBy, order, companyFilter]);
 
