@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-export const socket = io('http://localhost:7777', {
+export const socket = io(import.meta.env.NEXT_PUBLIC_API_BASE_URL, {
     transports: ['websocket'],
-    reconnectionRequests: 5,
+    reconnectionAttempts: 5,
 });

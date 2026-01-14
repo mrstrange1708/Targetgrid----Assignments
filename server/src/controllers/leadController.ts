@@ -4,7 +4,7 @@ import ScoreHistory from '../models/ScoreHistory';
 
 export const getLeads = async (req: Request, res: Response) => {
     try {
-        const leads = await Lead.find().sort({ score: -1 });
+        const leads = await Lead.find().sort({ current_score: -1 });
         res.json(leads);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching leads' });
@@ -32,7 +32,7 @@ export const createLead = async (req: Request, res: Response) => {
 
 export const getLeadHistory = async (req: Request, res: Response) => {
     try {
-        const history = await ScoreHistory.find({ leadId: req.params.id }).sort({ timestamp: -1 }).populate('eventId');
+        const history = await ScoreHistory.find({ lead_id: req.params.id }).sort({ timestamp: -1 }).populate('eventId');
         res.json(history);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching history' });
@@ -41,7 +41,7 @@ export const getLeadHistory = async (req: Request, res: Response) => {
 
 export const getLeaderboard = async (req: Request, res: Response) => {
     try {
-        const leads = await Lead.find().sort({ score: -1 }).limit(10);
+        const leads = await Lead.find().sort({ current_score: -1 }).limit(10);
         res.json(leads);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching leaderboard' });

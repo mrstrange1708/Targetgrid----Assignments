@@ -1,0 +1,36 @@
+[
+    {
+        "event_type": "EMAIL_OPEN",
+        "source": "manual",
+        "metadata": {
+            "email": "alice@microsoft.com",
+            "name": "Alice Johnson"
+        }
+    },
+    {
+        "event_type": "PURCHASE",
+        "source": "manual",
+        "metadata": {
+            "email": "bob@google.com",
+            "name": "Bob Smith",
+            "amount": 500
+        }
+    },
+    {
+        "event_type": "DEMO_REQUEST",
+        "source": "manual",
+        "metadata": {
+            "lead_id": "lead_1003",
+            "name": "Charlie Brown"
+        }
+    },
+    {
+        "event_type": "FORM_SUBMISSION",
+        "source": "manual",
+        "metadata": {
+            "email": "newuser@test.com",
+            "name": "New User",
+            "company": "Test Corp"
+        }
+    }
+]

@@ -1,0 +1,5 @@
+event_id,event_type,lead_id,email,timestamp,metadata
+evt_b1,EMAIL_OPEN,lead_1001,alice@microsoft.com,2026-01-14T10:00:00Z,"{""source"": ""batch""}"
+evt_b2,PURCHASE,lead_1002,bob@google.com,2026-01-14T11:00:00Z,"{""amount"": 250}"
+evt_b3,PAGE_VIEW,lead_1003,charlie@apple.com,2026-01-14T12:00:00Z,"{""url"": ""/pricing""}"
+evt_b4,DEMO_REQUEST,,newlead@startup.com,2026-01-14T13:00:00Z,"{""name"": ""David Wilson""}"

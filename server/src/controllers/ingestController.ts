@@ -6,15 +6,15 @@ import { addEventToQueue } from '../queue/eventQueue';
 
 export const ingestEvent = async (req: Request, res: Response) => {
     try {
-        const { eventId, type, source, timestamp, metadata } = req.body;
+        const { eventId, event_type, source, timestamp, metadata } = req.body;
 
-        if (!type || !source) {
-            return res.status(400).json({ message: 'Missing required fields: type, source' });
+        if (!event_type || !source) {
+            return res.status(400).json({ message: 'Missing required fields: event_type, source' });
         }
 
         const eventData = {
             eventId: eventId || uuidv4(),
-            type,
+            event_type,
             source,
             timestamp: timestamp || new Date(),
             metadata: metadata || {},
@@ -31,16 +31,13 @@ export const ingestEvent = async (req: Request, res: Response) => {
 
 export const ingestWebhook = async (req: Request, res: Response) => {
     try {
-        // Basic adapter for Segment-like webhooks or generic
-        // Assume body is the event or list of events
         const body = req.body;
 
-        // If array
         if (Array.isArray(body)) {
             for (const item of body) {
                 await addEventToQueue({
-                    eventId: item.messageId || uuidv4(),
-                    type: item.type || 'unknown',
+                    eventId: item.messageId || item.eventId || uuidv4(),
+                    event_type: item.type || item.event_type || 'unknown',
                     source: 'webhook',
                     timestamp: item.timestamp || new Date(),
                     metadata: item
@@ -48,8 +45,8 @@ export const ingestWebhook = async (req: Request, res: Response) => {
             }
         } else {
             await addEventToQueue({
-                eventId: body.messageId || uuidv4(),
-                type: body.type || 'unknown',
+                eventId: body.messageId || body.eventId || uuidv4(),
+                event_type: body.type || body.event_type || 'unknown',
                 source: 'webhook',
                 timestamp: body.timestamp || new Date(),
                 metadata: body
@@ -78,13 +75,26 @@ export const ingestBatch = async (req: Request, res: Response) => {
             try {
                 let count = 0;
                 for (const item of results) {
+                    // Map user headers (event_id, lead_id, event_type, metadata)
                     const eventData = {
-                        eventId: item.eventId || uuidv4(),
-                        type: item.type || 'unknown_batch',
+                        eventId: item.event_id || item.eventId || uuidv4(),
+                        event_type: item.event_type || item.type || 'unknown_batch',
                         source: item.source || 'batch_upload',
                         timestamp: item.timestamp ? new Date(item.timestamp) : new Date(),
                         metadata: item
                     };
+
+                    // Try parsing metadata if it's a string JSON
+                    if (typeof item.metadata === 'string') {
+                        try {
+                            eventData.metadata = JSON.parse(item.metadata);
+                            // Preserve lead_id if it was top level in item
+                            if (item.lead_id) eventData.metadata.lead_id = item.lead_id;
+                        } catch (e) {
+                            // Keep as string if not JSON
+                        }
+                    }
+
                     await addEventToQueue(eventData);
                     count++;
                 }

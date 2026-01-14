@@ -2,7 +2,7 @@ import { Worker, Job } from 'bullmq';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import Event from '../models/Event';
-import Lead from '../models/Lead';
+import Lead, { ILead } from '../models/Lead';
 import ScoringRule from '../models/ScoringRule';
 import ScoreHistory from '../models/ScoreHistory';
 import { eventEmitter } from './eventQueue';
@@ -14,9 +14,9 @@ const connection = {
     port: parseInt(process.env.REDIS_PORT || '6379'),
 };
 
-const processEventLogic = async (data: any, io: Server) => {
-    const { eventId, type, source, timestamp, metadata } = data;
-    console.log(`Processing Event: ${type}`);
+export const processEventLogic = async (data: any, io: Server) => {
+    const { eventId, event_type, source, timestamp, metadata } = data;
+    console.log(`Processing Event: ${event_type}`);
 
     try {
         // 1. Idempotency Check
@@ -27,28 +27,33 @@ const processEventLogic = async (data: any, io: Server) => {
         }
 
         // 2. Identify Lead
-        let lead = null;
-        if (metadata.email) {
-            lead = await Lead.findOne({ email: metadata.email });
-            if (!lead) {
-                // Create new lead
-                lead = await Lead.create({
-                    email: metadata.email,
-                    name: metadata.name || 'Unknown',
-                    company: metadata.company || 'Unknown',
-                    status: 'new'
-                });
-                console.log(`Created new lead: ${lead.email}`);
-            }
-        } else if (metadata.leadId) {
-            lead = await Lead.findById(metadata.leadId);
+        let lead: ILead | null = null;
+        const email = metadata.email || metadata.metadata?.email;
+        const lead_id = metadata.lead_id || metadata.metadata?.lead_id;
+
+        if (email) {
+            lead = await Lead.findOne({ email }) as ILead | null;
+        } else if (lead_id) {
+            lead = await Lead.findOne({ externalId: lead_id }) as ILead | null;
+        }
+
+        if (!lead && (email || lead_id)) {
+            // Create new lead
+            lead = await Lead.create({
+                email: email || `${lead_id}@placeholder.com`,
+                name: metadata.name || metadata.metadata?.name || 'Unknown',
+                company: metadata.company || metadata.metadata?.company || 'Unknown',
+                externalId: lead_id,
+                status: 'new'
+            }) as unknown as ILead;
+            console.log(`Created new lead: ${lead.email || lead.externalId}`);
         }
 
         if (!lead) {
             console.log(`No lead identified for event ${eventId}. Storing event as orphan.`);
             await Event.create({
                 eventId,
-                type,
+                event_type,
                 source,
                 timestamp,
                 metadata,
@@ -58,42 +63,42 @@ const processEventLogic = async (data: any, io: Server) => {
         }
 
         // 3. Scoring
-        const rule = await ScoringRule.findOne({ eventType: type, active: true });
+        const rule = await ScoringRule.findOne({ event_type: event_type, active: true });
         let points = 0;
         if (rule) {
             points = rule.points;
         } else {
-            console.log(`No active scoring rule for event type ${type}`);
+            console.log(`No active scoring rule for event type ${event_type}`);
         }
 
         // 4. Update Lead
-        const previousScore = lead.score;
-        let newScore = lead.score + points;
+        const previousScore = lead.current_score;
+        let newScore = lead.current_score + points;
 
         // Cap score at 1000
         if (newScore > 1000) newScore = 1000;
 
-        lead.score = newScore;
+        lead.current_score = newScore;
         await lead.save();
 
         // Store Event
         const eventDoc = await Event.create({
             eventId,
-            type,
+            event_type,
             source,
             timestamp,
             metadata,
-            leadId: lead._id,
+            lead_id: lead._id,
             processed: true
         });
 
         // 5. History
         if (points !== 0) {
             await ScoreHistory.create({
-                leadId: lead._id,
+                lead_id: lead._id,
                 scoreChange: points,
-                newScore: lead.score,
-                reason: `Event: ${type}`,
+                score: lead.current_score,
+                reason: `Event: ${event_type}`,
                 eventId: eventDoc._id
             });
         }
@@ -101,12 +106,12 @@ const processEventLogic = async (data: any, io: Server) => {
         // 6. Real-time Update
         io.emit('score-update', {
             leadId: lead._id,
-            score: lead.score,
+            score: lead.current_score,
             name: lead.name,
             email: lead.email,
             timestamp: new Date()
         });
-        console.log(`Processed ${type} for ${lead.email}. Score: ${previousScore} -> ${lead.score}`);
+        console.log(`Processed ${event_type} for ${lead.email || lead.externalId}. Score: ${previousScore} -> ${lead.current_score}`);
 
     } catch (err) {
         console.error(`Error processing event ${eventId}:`, err);

@@ -4,7 +4,8 @@ export interface ILead extends Document {
     name: string;
     email: string;
     company: string;
-    score: number;
+    current_score: number;
+    externalId?: string; // To store lead_id from CSVs
     status: string;
     createdAt: Date;
     updatedAt: Date;
@@ -15,7 +16,8 @@ const LeadSchema: Schema = new Schema(
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         company: { type: String },
-        score: { type: Number, default: 0 },
+        current_score: { type: Number, default: 0 },
+        externalId: { type: String, unique: true, sparse: true },
         status: { type: String, default: 'new' }, // new, active, qualified, customer
     },
     { timestamps: true }
