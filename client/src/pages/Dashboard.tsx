@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { api } from '../lib/api';
 import {
     Users,
     Calendar,
@@ -50,7 +50,6 @@ interface Lead {
     current_score: number;
 }
 
-const API_BASE = 'http://localhost:7777/api';
 
 const Dashboard: React.FC = () => {
     const [stats, setStats] = useState<Stats | null>(null);
@@ -65,10 +64,10 @@ const Dashboard: React.FC = () => {
         if (showLoading) setLoading(true);
         try {
             const [statsRes, companyRes, trendRes, leadsRes] = await Promise.all([
-                axios.get(`${API_BASE}/analytics/stats`),
-                axios.get(`${API_BASE}/analytics/companies`),
-                axios.get(`${API_BASE}/analytics/trends`, { params: { range } }),
-                axios.get(`${API_BASE}/leads`) // LeadList already sorts by score
+                api.get('/analytics/stats'),
+                api.get('/analytics/companies'),
+                api.get('/analytics/trends', { params: { range } }),
+                api.get('/leads') // LeadList already sorts by score
             ]);
 
             setStats(statsRes.data);
