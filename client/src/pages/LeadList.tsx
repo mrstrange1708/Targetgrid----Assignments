@@ -5,14 +5,12 @@ import { socket } from '../lib/socket';
 import type { Lead } from '../types';
 import {
     TrendingUp,
-    User,
     Building2,
     ChevronRight,
     Search,
     Filter,
     SortAsc,
-    SortDesc,
-    ArrowUpDown
+    SortDesc
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -29,7 +27,7 @@ export default function LeadList() {
         fetchLeads();
         fetchCompanies();
 
-        socket.on('score-update', (data: any) => {
+        socket.on('score-update', (_data: any) => {
             fetchLeads();
         });
 
