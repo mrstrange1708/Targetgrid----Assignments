@@ -2,20 +2,13 @@ import { Queue, Worker, Job } from 'bullmq';
 import { Server } from 'socket.io';
 import Lead from '../models/Lead';
 import ScoreHistory from '../models/ScoreHistory';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const connection = {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-};
+import { redisConnection } from '../config/config';
 
 const DECAY_POINTS = 5;
 const INACTIVITY_DAYS = 30;
 
 export const initDecayWorker = async (io: Server) => {
-    const decayQueue = new Queue('score-decay-queue', { connection });
+    const decayQueue = new Queue('score-decay-queue', { connection: redisConnection });
 
     // Add repeatable job to run every 24 hours
     // For demo/dev, we could run it more often, but let's stick to 24h
@@ -61,7 +54,7 @@ export const initDecayWorker = async (io: Server) => {
                     timestamp: new Date()
                 });
             }
-        }, { connection });
+        }, { connection: redisConnection });
 
         worker.on('failed', (job, err) => {
             console.error('Decay Job failed:', err);

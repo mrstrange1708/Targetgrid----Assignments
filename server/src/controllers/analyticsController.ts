@@ -46,38 +46,77 @@ export const getCompanyDistribution = async (req: Request, res: Response) => {
 
 export const getEventTrends = async (req: Request, res: Response) => {
     try {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        sevenDaysAgo.setHours(0, 0, 0, 0);
+        const { range = '7d' } = req.query;
+        const now = new Date();
+        const startDate = new Date();
+        let format = "%Y-%m-%d";
+        let gapType: 'day' | 'month' = 'day';
+        let iterations = 7;
+
+        switch (range) {
+            case '30d':
+                startDate.setDate(now.getDate() - 30);
+                iterations = 30;
+                break;
+            case '6m':
+                startDate.setMonth(now.getMonth() - 6);
+                format = "%Y-%m";
+                gapType = 'month';
+                iterations = 6;
+                break;
+            case '1y':
+                startDate.setFullYear(now.getFullYear() - 1);
+                format = "%Y-%m";
+                gapType = 'month';
+                iterations = 12;
+                break;
+            case '7d':
+            default:
+                startDate.setDate(now.getDate() - 7);
+                iterations = 7;
+                break;
+        }
+        startDate.setHours(0, 0, 0, 0);
 
         const trends = await Event.aggregate([
-            { $match: { timestamp: { $gte: sevenDaysAgo } } },
+            { $match: { timestamp: { $gte: startDate } } },
             {
                 $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+                    _id: { $dateToString: { format: format, date: "$timestamp" } },
                     count: { $sum: 1 }
                 }
             },
             { $sort: { _id: 1 } }
         ]);
 
-        // Create a map for easy lookup
         const trendMap = new Map(trends.map(t => [t._id, t.count]));
-
-        // Ensure all last 7 days are present, even with 0 counts
         const formattedTrends = [];
-        for (let i = 6; i >= 0; i--) {
+
+        for (let i = iterations - 1; i >= 0; i--) {
             const date = new Date();
-            date.setDate(date.getDate() - i);
-            const dateStr = date.toISOString().split('T')[0];
+            if (gapType === 'day') {
+                date.setDate(date.getDate() - i);
+            } else {
+                date.setMonth(date.getMonth() - i);
+            }
+
+            const dateStr = date.toISOString().split('T')[0].substring(0, gapType === 'day' ? 10 : 7);
+
+            // For display formatting: "Jan 24" or "Jan 12"
+            const label = gapType === 'day'
+                ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+
             formattedTrends.push({
                 date: dateStr,
+                label: label,
                 count: trendMap.get(dateStr) || 0
             });
         }
 
         res.json(formattedTrends);
     } catch (error) {
+        console.error('Trend Error:', error);
         res.status(500).json({ message: 'Error fetching event trends' });
     }
 };

@@ -4,10 +4,7 @@ import { EventEmitter } from 'events';
 
 dotenv.config();
 
-const connection = {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-};
+import { redisConnection } from '../config/config';
 
 export const eventEmitter = new EventEmitter();
 let useRedis = true;
@@ -16,7 +13,7 @@ let eventQueue: Queue | null = null;
 const createQueue = () => {
     try {
         const q = new Queue('event-processing-queue', {
-            connection,
+            connection: redisConnection,
             defaultJobOptions: {
                 removeOnComplete: true,
                 removeOnFail: false,

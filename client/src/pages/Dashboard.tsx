@@ -38,6 +38,7 @@ interface CompanyData {
 
 interface TrendData {
     date: string;
+    label: string;
     count: number;
 }
 
@@ -57,6 +58,7 @@ const Dashboard: React.FC = () => {
     const [trends, setTrends] = useState<TrendData[]>([]);
     const [topLeads, setTopLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
+    const [range, setRange] = useState('7d');
     const refreshTimeout = React.useRef<NodeJS.Timeout | null>(null);
 
     const fetchData = async (showLoading = false) => {
@@ -65,7 +67,7 @@ const Dashboard: React.FC = () => {
             const [statsRes, companyRes, trendRes, leadsRes] = await Promise.all([
                 axios.get(`${API_BASE}/analytics/stats`),
                 axios.get(`${API_BASE}/analytics/companies`),
-                axios.get(`${API_BASE}/analytics/trends`),
+                axios.get(`${API_BASE}/analytics/trends`, { params: { range } }),
                 axios.get(`${API_BASE}/leads`) // LeadList already sorts by score
             ]);
 
@@ -98,7 +100,7 @@ const Dashboard: React.FC = () => {
             socket.off('score-update', debouncedFetch);
             if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
         };
-    }, []);
+    }, [range]);
 
     const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316'];
 
@@ -149,7 +151,16 @@ const Dashboard: React.FC = () => {
                             <Calendar className="text-indigo-600 w-5 h-5" />
                             Activity Trends
                         </h2>
-                        <span className="text-xs font-semibold px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full">Last 7 Days</span>
+                        <select
+                            className="text-xs font-semibold px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl border-none focus:ring-2 focus:ring-indigo-600/20 cursor-pointer outline-none transition-all"
+                            value={range}
+                            onChange={(e) => setRange(e.target.value)}
+                        >
+                            <option value="7d">Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                            <option value="6m">Last 6 Months</option>
+                            <option value="1y">Last 1 Year</option>
+                        </select>
                     </div>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
@@ -162,12 +173,11 @@ const Dashboard: React.FC = () => {
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                 <XAxis
-                                    dataKey="date"
+                                    dataKey="label"
                                     stroke="#94a3b8"
-                                    fontSize={12}
+                                    fontSize={10}
                                     tickLine={false}
                                     axisLine={false}
-                                    tickFormatter={(val) => val.split('-').slice(1).join('/')}
                                 />
                                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                                 <Tooltip

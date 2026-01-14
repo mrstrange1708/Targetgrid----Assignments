@@ -5,14 +5,8 @@ import Event from '../models/Event';
 import Lead, { ILead } from '../models/Lead';
 import ScoringRule from '../models/ScoringRule';
 import ScoreHistory from '../models/ScoreHistory';
+import { redisConnection } from '../config/config';
 import { eventEmitter } from './eventQueue';
-
-dotenv.config();
-
-const connection = {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-};
 
 export const processEventLogic = async (data: any, io: Server) => {
     const { eventId, event_type, source, timestamp, metadata } = data;
@@ -140,7 +134,7 @@ export const initWorker = (io: Server) => {
     try {
         const worker = new Worker('event-processing-queue', async (job: Job) => {
             await processEventLogic(job.data, io);
-        }, { connection });
+        }, { connection: redisConnection });
 
         worker.on('completed', (job: Job) => {
             // console.log(`Job ${job.id} has completed!`);
