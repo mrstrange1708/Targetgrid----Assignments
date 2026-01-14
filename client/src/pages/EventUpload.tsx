@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { api } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Send, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, Send, FileText, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function EventUpload() {
@@ -31,8 +31,8 @@ export default function EventUpload() {
         }
     };
 
-    const handleBatchSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleBatchSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         if (!file) return;
 
         setIsSubmitting(true);
@@ -48,6 +48,26 @@ export default function EventUpload() {
         } catch (error) {
             setStatus({ type: 'error', message: 'Batch upload failed.' });
         } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleSampleUpload = async () => {
+        setIsSubmitting(true);
+        setStatus({ type: 'info', message: 'Fetching sample data...' });
+        try {
+            const response = await fetch('/sample_batch.csv');
+            const blob = await response.blob();
+            const sampleFile = new File([blob], 'sample_batch.csv', { type: 'text/csv' });
+
+            const form = new FormData();
+            form.append('file', sampleFile);
+
+            const { data } = await api.post('/upload', form);
+            setStatus({ type: 'success', message: `Sample batch of ${data.count} events deployed!` });
+            setTimeout(() => navigate('/'), 1500);
+        } catch (error) {
+            setStatus({ type: 'error', message: 'Failed to load sample data.' });
             setIsSubmitting(false);
         }
     };
@@ -145,9 +165,21 @@ export default function EventUpload() {
                             </div>
                         </label>
                     </div>
-                    <button type="submit" disabled={!file || isSubmitting} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:opacity-50">
-                        {isSubmitting ? "Spooling Batch..." : "Synchronize Batch"}
-                    </button>
+                    <div className="w-full flex flex-col sm:flex-row gap-4">
+                        <button type="submit" disabled={!file || isSubmitting} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:opacity-50">
+                            {isSubmitting ? "Spooling Batch..." : "Synchronize Batch"}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleSampleUpload}
+                            disabled={isSubmitting}
+                            className="bg-white border-2 border-slate-200 hover:border-indigo-600 hover:text-indigo-600 text-slate-600 font-black uppercase tracking-widest py-4 px-6 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 group"
+                        >
+                            <Sparkles size={20} className="group-hover:animate-pulse" />
+                            Sample Data
+                        </button>
+                    </div>
                 </form>
             )}
 
