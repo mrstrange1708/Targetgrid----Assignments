@@ -44,3 +44,22 @@ export const addEventToQueue = async (eventData: any) => {
         eventEmitter.emit('job', { data: eventData, id: 'mem-' + Date.now() });
     }
 };
+
+export const addEventsToQueueBulk = async (events: any[]) => {
+    if (useRedis && eventQueue) {
+        try {
+            const jobs = events.map(data => ({ name: 'process-event', data }));
+            await eventQueue.addBulk(jobs);
+        } catch (err) {
+            console.warn('Redis unreachable. Switching to In-Memory for this batch.');
+            useRedis = false;
+            events.forEach(data => {
+                eventEmitter.emit('job', { data, id: 'mem-' + Date.now() });
+            });
+        }
+    } else {
+        events.forEach(data => {
+            eventEmitter.emit('job', { data, id: 'mem-' + Date.now() });
+        });
+    }
+};

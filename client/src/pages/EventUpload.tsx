@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../lib/api';
+import { useNavigate } from 'react-router-dom';
 import { Upload, Send, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -9,6 +10,7 @@ export default function EventUpload() {
     const [file, setFile] = useState<File | null>(null);
     const [status, setStatus] = useState({ type: '', message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const navigate = useNavigate();
 
     const handleSingleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -21,6 +23,7 @@ export default function EventUpload() {
             await api.post('/events', { ...formData, metadata: meta });
             setStatus({ type: 'success', message: 'Event ingested successfully.' });
             setFormData({ event_type: '', source: 'manual', metadata: '{}' });
+            setTimeout(() => navigate('/'), 1500);
         } catch (error) {
             setStatus({ type: 'error', message: 'Failed to ingest event.' });
         } finally {
@@ -41,6 +44,7 @@ export default function EventUpload() {
             const { data } = await api.post('/upload', form);
             setStatus({ type: 'success', message: `Batch of ${data.count} events uploaded and queued.` });
             setFile(null);
+            setTimeout(() => navigate('/'), 1500);
         } catch (error) {
             setStatus({ type: 'error', message: 'Batch upload failed.' });
         } finally {

@@ -134,7 +134,10 @@ export const initWorker = (io: Server) => {
     try {
         const worker = new Worker('event-processing-queue', async (job: Job) => {
             await processEventLogic(job.data, io);
-        }, { connection: redisConnection });
+        }, {
+            connection: redisConnection,
+            concurrency: 5 // Process more events in parallel for large batches
+        });
 
         worker.on('completed', (job: Job) => {
             // console.log(`Job ${job.id} has completed!`);

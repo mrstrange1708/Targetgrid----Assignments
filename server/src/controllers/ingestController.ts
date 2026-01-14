@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import csv from 'csv-parser';
-import { addEventToQueue } from '../queue/eventQueue';
+import { addEventToQueue, addEventsToQueueBulk } from '../queue/eventQueue';
 import { eventSchema, webhookSchema, verifyWebhookSignature } from '../utils/validation';
 
 export const ingestEvent = async (req: Request, res: Response) => {
@@ -90,9 +90,9 @@ export const ingestBatch = async (req: Request, res: Response) => {
         .on('data', (data: any) => results.push(data))
         .on('end', async () => {
             try {
-                let count = 0;
+                const eventsToQueue = [];
                 for (const item of results) {
-                    // Map user headers (event_id, lead_id, event_type, metadata)
+                    // Map headers
                     const eventData = {
                         eventId: item.event_id || item.eventId || uuidv4(),
                         event_type: item.event_type || item.type || 'unknown_batch',
@@ -101,24 +101,27 @@ export const ingestBatch = async (req: Request, res: Response) => {
                         metadata: item
                     };
 
-                    // Try parsing metadata if it's a string JSON
+                    // Try parsing metadata
                     if (typeof item.metadata === 'string') {
                         try {
                             eventData.metadata = JSON.parse(item.metadata);
-                            // Preserve lead_id if it was top level in item
                             if (item.lead_id) eventData.metadata.lead_id = item.lead_id;
                         } catch (e) {
-                            // Keep as string if not JSON
+                            // Keep as string
                         }
+                    } else if (item.lead_id && !eventData.metadata.lead_id) {
+                        eventData.metadata.lead_id = item.lead_id;
                     }
 
-                    await addEventToQueue(eventData);
-                    count++;
+                    eventsToQueue.push(eventData);
+                }
+
+                if (eventsToQueue.length > 0) {
+                    await addEventsToQueueBulk(eventsToQueue);
                 }
 
                 if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-
-                res.status(202).json({ message: 'Batch accepted', count });
+                res.status(202).json({ message: 'Batch accepted', count: eventsToQueue.length });
             } catch (err) {
                 console.error('Batch Process Error:', err);
                 res.status(500).json({ message: 'Error processing batch' });

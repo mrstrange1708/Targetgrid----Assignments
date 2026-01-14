@@ -20,9 +20,16 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: CLIENT_URL,
+        origin: "*",
         methods: ["GET", "POST"]
     }
+});
+
+io.on('connection', (socket) => {
+    console.log(`[Socket] New client connected: ${socket.id}`);
+    socket.on('disconnect', () => {
+        console.log(`[Socket] Client disconnected: ${socket.id}`);
+    });
 });
 
 app.use(cors());
