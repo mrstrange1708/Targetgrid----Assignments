@@ -125,7 +125,7 @@ const Dashboard: React.FC = () => {
     }
 
     return (
-        <div className="space-y-8 p-6 animate-in fade-in duration-500">
+        <div className="space-y-6 md:space-y-8 p-1 md:p-6 animate-in fade-in duration-500">
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -174,30 +174,38 @@ const Dashboard: React.FC = () => {
                             <option value="1y">Last 1 Year</option>
                         </select>
                     </div>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={trends}>
-                                <defs>
-                                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis
-                                    dataKey="label"
-                                    stroke="#94a3b8"
-                                    fontSize={10}
-                                    tickLine={false}
-                                    axisLine={false}
-                                />
-                                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                />
-                                <Area type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorCount)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                    <div className="h-64 sm:h-72 flex flex-col items-center justify-center">
+                        {trends.length > 0 && trends.some(t => t.count > 0) ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={trends}>
+                                    <defs>
+                                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis
+                                        dataKey="label"
+                                        stroke="#94a3b8"
+                                        fontSize={10}
+                                        tickLine={false}
+                                        axisLine={false}
+                                    />
+                                    <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Area type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorCount)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="text-center">
+                                <Activity className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                                <p className="text-slate-400 font-medium">No activity data found for this range.</p>
+                                <p className="text-slate-300 text-xs mt-1">Try uploading events or choosing a larger range.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -209,31 +217,39 @@ const Dashboard: React.FC = () => {
                             Leading Companies
                         </h2>
                     </div>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={companies} layout="vertical">
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                                <XAxis type="number" hide />
-                                <YAxis
-                                    dataKey="company"
-                                    type="category"
-                                    stroke="#475569"
-                                    fontSize={12}
-                                    width={100}
-                                    tickLine={false}
-                                    axisLine={false}
-                                />
-                                <Tooltip
-                                    cursor={{ fill: '#f8fafc' }}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                />
-                                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                                    {companies.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                    <div className="h-64 flex flex-col items-center justify-center">
+                        {companies.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={companies} layout="vertical">
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                    <XAxis type="number" hide />
+                                    <YAxis
+                                        dataKey="company"
+                                        type="category"
+                                        stroke="#475569"
+                                        fontSize={12}
+                                        width={100}
+                                        tickLine={false}
+                                        axisLine={false}
+                                    />
+                                    <Tooltip
+                                        cursor={{ fill: '#f8fafc' }}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                                        {companies.map((_, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="text-center">
+                                <Building2 className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                                <p className="text-slate-400 font-medium">No company distribution data.</p>
+                                <p className="text-slate-300 text-xs mt-1">Leads from different companies will appear here.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

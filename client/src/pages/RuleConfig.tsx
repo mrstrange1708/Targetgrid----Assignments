@@ -59,25 +59,25 @@ export default function RuleConfig() {
 
     return (
         <div className="space-y-10 animate-in fade-in duration-500">
-            <div className="flex justify-between items-end">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
                 <div>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Scoring Engine</h1>
-                    <p className="text-slate-500 mt-2 text-lg">Define the behavior that drives your lead qualification.</p>
+                    <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">Scoring Engine</h1>
+                    <p className="text-slate-500 mt-2 text-sm md:text-lg">Define the behavior that drives your lead qualification.</p>
                 </div>
                 <button
                     onClick={() => setIsAdding(!isAdding)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-6 py-3 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98] flex items-center gap-2"
+                    className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-black px-6 py-3 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                 >
-                    <Plus size={20} /> forge rule
+                    <Plus size={20} /> Forge Rule
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                {/* Rule Creation Form Component (Overlay style or Sidebar style) */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8">
+                {/* Rule Creation Form Component */}
                 {isAdding && (
                     <div className="col-span-1 lg:col-span-full animate-in slide-in-from-top-4 duration-300">
-                        <form onSubmit={handleCreate} className="premium-card p-8 flex flex-wrap items-end gap-6 bg-indigo-600/5 border-indigo-600/20">
-                            <div className="flex-1 min-w-[200px]">
+                        <form onSubmit={handleCreate} className="premium-card p-5 md:p-8 flex flex-col sm:flex-row sm:items-end gap-5 md:gap-6 bg-indigo-600/5 border-indigo-600/20">
+                            <div className="flex-1 min-w-0">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Event Signal</label>
                                 <input
                                     type="text" required placeholder="EMAIL_OPEN"
@@ -85,24 +85,24 @@ export default function RuleConfig() {
                                     value={newRule.event_type} onChange={e => setNewRule({ ...newRule, event_type: e.target.value })}
                                 />
                             </div>
-                            <div className="w-40">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Point Weight</label>
+                            <div className="w-full sm:w-40">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Weight</label>
                                 <input
                                     type="number" required
                                     className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                                     value={newRule.points} onChange={e => setNewRule({ ...newRule, points: parseInt(e.target.value) })}
                                 />
                             </div>
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 w-full sm:w-auto">
                                 <button
                                     type="submit" disabled={isSaving}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl shadow-lg transition-all active:scale-[0.95]"
+                                    className="flex-1 sm:grow-0 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest px-6 md:px-8 py-3 rounded-xl shadow-lg transition-all active:scale-[0.95]"
                                 >
-                                    {isSaving ? "Forging..." : "Save Rule"}
+                                    {isSaving ? "Forging..." : "Save"}
                                 </button>
                                 <button
                                     type="button" onClick={() => setIsAdding(false)}
-                                    className="px-6 py-3 text-slate-500 font-bold uppercase tracking-widest hover:text-slate-700"
+                                    className="px-4 py-3 text-slate-500 font-bold uppercase tracking-widest hover:text-slate-700 text-sm"
                                 >
                                     Cancel
                                 </button>

@@ -49,13 +49,13 @@ export default function EventUpload() {
     };
 
     return (
-        <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 p-1">
             <div className="text-center">
-                <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Ingest Events</h1>
-                <p className="text-slate-500 mt-2">Feed your lead engine with direct or batch event data.</p>
+                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">Ingest Events</h1>
+                <p className="text-slate-500 mt-2 text-sm md:text-base">Feed your lead engine with direct or batch event data.</p>
             </div>
 
-            <div className="flex p-1.5 bg-slate-200/50 rounded-2xl w-full max-w-sm mx-auto">
+            <div className="flex p-1.5 bg-slate-200/50 rounded-2xl w-full max-w-xs sm:max-w-sm mx-auto">
                 <button
                     onClick={() => { setActiveTab('single'); setStatus({ type: '', message: '' }); }}
                     className={cn(
@@ -87,16 +87,16 @@ export default function EventUpload() {
             )}
 
             {activeTab === 'single' ? (
-                <form onSubmit={handleSingleSubmit} className="premium-card p-8 space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="col-span-1">
+                <form onSubmit={handleSingleSubmit} className="premium-card p-5 md:p-8 space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
+                        <div>
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Event Type</label>
                             <input type="text" required placeholder="EMAIL_OPEN"
                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
                                 value={formData.event_type} onChange={e => setFormData({ ...formData, event_type: e.target.value })}
                             />
                         </div>
-                        <div className="col-span-1">
+                        <div>
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Source</label>
                             <input type="text" required
                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
@@ -117,22 +117,22 @@ export default function EventUpload() {
                     </button>
                 </form>
             ) : (
-                <form onSubmit={handleBatchSubmit} className="premium-card p-10 space-y-8 text-center flex flex-col items-center">
+                <form onSubmit={handleBatchSubmit} className="premium-card p-6 md:p-10 space-y-8 text-center flex flex-col items-center">
                     <div className={cn(
-                        "w-full border-4 border-dashed rounded-3xl p-12 transition-all group cursor-pointer relative",
+                        "w-full border-4 border-dashed rounded-3xl p-6 md:p-12 transition-all group cursor-pointer relative",
                         file ? "bg-indigo-50 border-indigo-200" : "bg-slate-50 border-slate-200 hover:border-indigo-400"
                     )}>
                         <input type="file" accept=".csv" onChange={e => setFile(e.target.files?.[0] || null)} className="hidden" id="file-upload" />
                         <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-4">
                             <div className={cn(
-                                "w-20 h-20 rounded-2xl flex items-center justify-center transition-all",
+                                "w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center transition-all",
                                 file ? "bg-indigo-600 text-white shadow-xl rotate-0" : "bg-slate-200 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-400 group-hover:rotate-12"
                             )}>
-                                {file ? <FileText size={40} /> : <Upload size={40} />}
+                                {file ? <FileText size={32} /> : <Upload size={32} />}
                             </div>
                             <div>
-                                <span className="block text-xl font-black text-slate-800 tracking-tight">{file ? file.name : "Select CSV File"}</span>
-                                <span className="text-sm text-slate-400 font-medium">Drag or click to choose your ingestion source</span>
+                                <span className="block text-lg md:text-xl font-black text-slate-800 tracking-tight">{file ? file.name : "Select CSV File"}</span>
+                                <span className="text-xs md:text-sm text-slate-400 font-medium">Drag or click to choose your ingestion source</span>
                             </div>
                             <div className="flex gap-2">
                                 <span className="text-[10px] font-bold px-2 py-1 rounded bg-slate-200 text-slate-500 uppercase tracking-wider">event_id</span>

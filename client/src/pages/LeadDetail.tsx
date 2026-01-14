@@ -73,14 +73,14 @@ export default function LeadDetail() {
                 </div>
 
                 {/* Score Chart Card */}
-                <div className="lg:col-span-2 premium-card p-8 flex flex-col">
-                    <div className="flex justify-between items-start mb-8">
+                <div className="lg:col-span-2 premium-card p-5 md:p-8 flex flex-col">
+                    <div className="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4">
                         <div>
-                            <h3 className="text-xl font-bold text-slate-900">Score Progress</h3>
-                            <p className="text-slate-400 text-sm mt-1">Growth trajectory over the last activity period.</p>
+                            <h3 className="text-xl font-bold text-slate-900 leading-tight">Score Progress</h3>
+                            <p className="text-slate-400 text-xs md:text-sm mt-1">Growth trajectory over the last activity period.</p>
                         </div>
-                        <div className="text-right">
-                            <div className="text-5xl font-black text-indigo-600 tabular-nums">
+                        <div className="text-left sm:text-right">
+                            <div className="text-4xl md:text-5xl font-black text-indigo-600 tabular-nums">
                                 {lead.current_score}
                             </div>
                             <div className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mt-1">Current Score</div>
@@ -148,31 +148,31 @@ export default function LeadDetail() {
                     {history.map((item) => (
                         <div
                             key={item._id}
-                            className="bg-slate-50/50 hover:bg-white border border-transparent hover:border-slate-200 p-4 rounded-2xl flex items-center justify-between transition-all group"
+                            className="bg-slate-50/50 hover:bg-white border border-transparent hover:border-slate-200 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all group gap-4 sm:gap-0"
                         >
                             <div className="flex items-center gap-4">
                                 <div className={cn(
-                                    "w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110",
+                                    "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110",
                                     item.scoreChange >= 0 ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-600"
                                 )}>
-                                    {item.scoreChange >= 0 ? <ArrowUpRight size={24} /> : <ArrowDownRight size={24} />}
+                                    {item.scoreChange >= 0 ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
                                 </div>
-                                <div>
-                                    <div className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
+                                <div className="min-w-0">
+                                    <div className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight text-sm md:text-base truncate">
                                         {item.reason.replace('Event: ', '')}
                                     </div>
-                                    <div className="flex items-center gap-3 text-slate-400 text-xs font-semibold uppercase tracking-widest mt-1">
-                                        <div className="flex items-center gap-1"><Calendar size={12} /> {new Date(item.timestamp).toLocaleDateString()}</div>
+                                    <div className="flex items-center gap-2 md:gap-3 text-slate-400 text-[10px] md:text-xs font-semibold uppercase tracking-widest mt-1">
+                                        <div className="flex items-center gap-1"><Calendar size={10} /> {new Date(item.timestamp).toLocaleDateString()}</div>
                                         <div>&bull;</div>
                                         <div>{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="text-right flex items-center gap-6">
+                            <div className="text-right flex items-center self-end sm:self-center gap-6">
                                 <div>
                                     <div className={cn(
-                                        "text-xl font-black tabular-nums",
+                                        "text-lg md:text-xl font-black tabular-nums",
                                         item.scoreChange >= 0 ? "text-emerald-500" : "text-rose-500"
                                     )}>
                                         {item.scoreChange > 0 ? '+' : ''}{item.scoreChange}

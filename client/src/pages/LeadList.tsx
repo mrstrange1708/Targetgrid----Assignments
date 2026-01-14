@@ -70,7 +70,7 @@ export default function LeadList() {
     const toggleOrder = () => setOrder(prev => prev === 'asc' ? 'desc' : 'asc');
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Leaderboard</h1>
@@ -83,25 +83,25 @@ export default function LeadList() {
             </div>
 
             {/* Controls Bar */}
-            <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col lg:flex-row gap-4">
+            <div className="bg-white p-3 md:p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col lg:flex-row gap-3 md:gap-4">
                 {/* Search */}
                 <div className="relative flex-grow">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                         type="text"
-                        placeholder="Search leads by name, email or company..."
-                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                        placeholder="Search leads..."
+                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600/20 transition-all text-sm md:text-base"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-center gap-3">
                     {/* Company Filter */}
-                    <div className="relative">
+                    <div className="relative w-full sm:w-auto">
                         <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                         <select
-                            className="pl-10 pr-10 py-3 bg-slate-50 border-none rounded-2xl text-slate-900 font-medium appearance-none focus:ring-2 focus:ring-indigo-600/20 transition-all cursor-pointer"
+                            className="w-full pl-10 pr-10 py-3 bg-slate-50 border-none rounded-2xl text-slate-900 font-medium appearance-none focus:ring-2 focus:ring-indigo-600/20 transition-all cursor-pointer text-sm"
                             value={companyFilter}
                             onChange={(e) => setCompanyFilter(e.target.value)}
                         >
@@ -113,19 +113,19 @@ export default function LeadList() {
                     </div>
 
                     {/* Sort By */}
-                    <div className="flex items-center gap-2 bg-slate-50 rounded-2xl p-1">
+                    <div className="flex items-center gap-2 bg-slate-50 rounded-2xl p-1 w-full sm:w-auto">
                         <select
-                            className="pl-4 pr-10 py-2 bg-transparent border-none rounded-xl text-slate-900 font-bold text-sm appearance-none focus:ring-0 cursor-pointer"
+                            className="flex-grow pl-4 pr-10 py-2 bg-transparent border-none rounded-xl text-slate-900 font-bold text-xs md:text-sm appearance-none focus:ring-0 cursor-pointer"
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                         >
-                            <option value="current_score">Sort by Score</option>
-                            <option value="name">Sort by Name</option>
-                            <option value="company">Sort by Company</option>
+                            <option value="current_score">Score</option>
+                            <option value="name">Name</option>
+                            <option value="company">Company</option>
                         </select>
                         <button
                             onClick={toggleOrder}
-                            className="p-2 hover:bg-white rounded-xl text-indigo-600 transition-colors shadow-sm"
+                            className="p-2 hover:bg-white rounded-xl text-indigo-600 transition-colors shadow-sm bg-white"
                             title={order === 'asc' ? 'Sort Ascending' : 'Sort Descending'}
                         >
                             {order === 'asc' ? <SortAsc size={18} /> : <SortDesc size={18} />}
@@ -143,15 +143,21 @@ export default function LeadList() {
                     <Link
                         to={`/leads/${lead._id}`}
                         key={lead._id}
-                        className="premium-card group relative p-5 flex items-center gap-6 overflow-hidden"
+                        className="premium-card group relative p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 overflow-hidden"
                     >
-                        <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-xl font-bold text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
-                            #{index + 1}
+                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                            <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-lg md:text-xl font-bold text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                                #{index + 1}
+                            </div>
+                            <div className="sm:hidden flex-grow">
+                                <h3 className="text-lg font-bold text-slate-900 leading-tight">{lead.name}</h3>
+                                <p className="text-xs text-slate-400 font-medium">{lead.company}</p>
+                            </div>
                         </div>
 
-                        <div className="flex-grow flex items-center gap-10">
-                            <div className="min-w-[200px]">
-                                <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{lead.name}</h3>
+                        <div className="flex-grow hidden sm:flex items-center gap-10">
+                            <div className="min-w-[150px] md:min-w-[200px]">
+                                <h3 className="text-lg md:text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{lead.name}</h3>
                                 <div className="flex items-center gap-2 text-slate-400 mt-1">
                                     <Building2 size={14} />
                                     <span className="text-sm font-medium">{lead.company}</span>
@@ -167,12 +173,12 @@ export default function LeadList() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-8">
+                        <div className="flex items-center justify-between w-full sm:w-auto gap-8 sm:ml-auto">
                             <div className="text-right">
-                                <div className="text-4xl font-black text-indigo-600 tabular-nums leading-none">
+                                <div className="text-3xl md:text-4xl font-black text-indigo-600 tabular-nums leading-none">
                                     {lead.current_score}
                                 </div>
-                                <div className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mt-1">Consistency Score</div>
+                                <div className="text-[9px] md:text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mt-1">Consistency Score</div>
                             </div>
                             <ChevronRight size={24} className="text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
                         </div>
